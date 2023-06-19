@@ -1,13 +1,43 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-// console.log('fileURLToPath:', fileURLToPath)
+// const { a, b } = require('./filesUsage/fileInfo');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { b } = require('./fileInfoCopy.js');
+const path = require('path');
 
-console.log('__filename:', __filename);
-console.log('__dirname:', __dirname);
+// a();
 
-console.log('import.meta:', import.meta);
+const d = async () => {
+  return await b();
+};
 
-console.log('import.meta.url:', import.meta.url);
+d();
+
+// const fs = require('fs').promises;
+
+// const c = async () => {
+//   return await fs
+//     .readdir(__dirname)
+//     .then(files => {
+//       console.log('b __dirname:', __dirname);
+//       console.log('b files:', files);
+
+//       return Promise.all(
+//         files.map(async filename => {
+//           console.log('b >> filename:', filename);
+
+//           const stats = await fs.stat(filename);
+//           console.log('b >> filename:', filename);
+//           console.log('b >> stats:', stats.size);
+
+//           return {
+//             Name: filename,
+//             Size: stats.size,
+//             Date: stats.mtime,
+//           };
+//         })
+//       );
+//     })
+//     // Результат виконання цього промісу, змінна result
+//     .then(result => console.table(result));
+// };
+
+// c();

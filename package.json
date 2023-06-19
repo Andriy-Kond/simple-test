@@ -2,8 +2,7 @@
   "name": "simple-test",
   "version": "1.0.0",
   "description": "JS, Node.js, HTML, CSS",
-  "main": "index.js",
-  "type": "module",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
@@ -16,6 +15,7 @@
     "nodemon": "^2.0.22"
   },
   "dependencies": {
+    "fs": "^0.0.1-security",
     "path": "^0.12.7",
     "url": "^0.11.1"
   }
