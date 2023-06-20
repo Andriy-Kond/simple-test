@@ -1,43 +1,108 @@
-// const { a, b } = require('./filesUsage/fileInfo');
+// обробляти всілякі комбінації параметрів та їх формати незручно, для цього зазвичай використовують сторонні npm-модулі. Один з найпопулярніших - модуль commander
+// // Щоб використовувати інтерактивне введення в консолі на кшталт питання-відповідь, можна використовувати стандартний модуль Node.js readline.
+// const readline = require('readline');
 
-const { b } = require('./fileInfoCopy.js');
-const path = require('path');
+// // створюємо екземпляр rl де в опціях передаємо потоки введення та виведення, консоль, файл і т.д.
+// const rl = readline.createInterface({
+//   input: process.stdin, // введення зі стандартного потоку
+//   output: process.stdout, // виведення у стандартний потік
+// });
 
-// a();
+// // Обробка кожного введеного рядка відбувається через подію line:
+// rl.on('line', cmd => {
+//   console.log(`You just typed: ${cmd}`);
+// });
 
-const d = async () => {
-  return await b();
+// // можливість поставити користувачеві питання та отримати на нього відповідь
+// rl.question('Як вас звати?', answer => {
+//   console.log(`Приємно познайомитися ${answer}`);
+// });
+
+// // при якійсь тривалій операції можна поставити розмову на паузу (заблокувати введення):
+// rl.pause();
+
+// // Щоб закрити інтерфейсом readline, необхідно виконати функцію:
+// rl.close();
+
+// Напишемо додаток – «Вгадай число», де необхідно вгадати задумане програмою число від 1 до 10 та програма в кінці виведе, за скільки спроб нам це вдалося.
+// Нам знадобляться стандартні модулі fs, readline і нестандартні commander та colors.
+
+const readline = require('readline');
+const fs = require('fs').promises;
+const { program } = require('commander');
+require('colors');
+
+// Ми вказуємо, що опціонально чекаємо на введення параметра -f або довший запис --file. Тобто визначаємо запуск програми у наступному вигляді: node game.js -f my_log.txt
+program.option(
+  '-f, --file [type]',
+  'file for saving game results',
+  'results.txt' // якщо ім'я файлу не буде введено, то за замовчуванням він буде створений з ім'ям results.txt
+);
+program.parse(process.argv);
+
+// ініціалізація модуля readline
+const rl = readline.createInterface({
+  input: process.stdin, // длі вводу
+  output: process.stdout, // для виводу
+});
+
+let count = 0; // підрахунок кількості спроб, які знадобилися, щоб вгадати число
+const logFile = program.opts().file; // ім'я файлу куди будуть збережені результати гри
+const mind = Math.floor(Math.random() * 10) + 1; // випадкове число від 1 до 10, яке необхідно відгадати
+
+// Ф-я валідації введених значень у консолі
+const isValid = value => {
+  if (isNaN(value)) {
+    // чи це саме число?
+    console.log('Введіть число!'.red);
+    return false;
+  }
+  if (value < 1 || value > 10) {
+    // чи число лежить у діапазоні від 1 до 10?
+    console.log('Число має бути в діапазоні від 1 до 10'.red);
+    return false;
+  }
+  return true;
 };
 
-d();
+// Ф-я збереження результатів гри
+// Ф-я асинхронна, бо ми очікуємо виконання операції збереження результатів.
+const log = async data => {
+  try {
+    // Якщо файл існує, то результати будуть дописані в існуючий файл, якщо немає файлу - він буде створений.
+    await fs.appendFile(logFile, `${data}\n`); // дописує у файл і переходить на новий рядок
+    console.log(`Вдалося зберегти результат у файл ${logFile}`.green);
+  } catch (err) {
+    console.log(`Не вдалося зберегти файл ${logFile}`.red);
+  }
+};
 
-// const fs = require('fs').promises;
+// Основна ф-я
+const game = () => {
+  rl.question(
+    'Введіть число від 1 до 10, щоб вгадати задумане: '.yellow,
+    value => {
+      let a = +value;
 
-// const c = async () => {
-//   return await fs
-//     .readdir(__dirname)
-//     .then(files => {
-//       console.log('b __dirname:', __dirname);
-//       console.log('b files:', files);
+      // Якщо не проходить валідація, то запускаємо функцію гри наново:
+      if (!isValid(a)) {
+        game();
+        return;
+      }
 
-//       return Promise.all(
-//         files.map(async filename => {
-//           console.log('b >> filename:', filename);
+      // Якщо валідацію пройдено, то ми збільшуємо лічильник спроб на 1.
+      count += 1;
+      if (a === mind) {
+        console.log('Вітаю Ви вгадали число за %d крок(ів)'.green, count); // count передається замість %d
+        log(
+          `${new Date().toLocaleDateString()}: Вітаю Ви вгадали число за ${count} крок(ів)`
+        ).finally(() => rl.close());
+        return;
+      }
+      console.log('Ви не вгадали ще спроба'.red);
+      game();
+    }
+  );
+};
 
-//           const stats = await fs.stat(filename);
-//           console.log('b >> filename:', filename);
-//           console.log('b >> stats:', stats.size);
-
-//           return {
-//             Name: filename,
-//             Size: stats.size,
-//             Date: stats.mtime,
-//           };
-//         })
-//       );
-//     })
-//     // Результат виконання цього промісу, змінна result
-//     .then(result => console.table(result));
-// };
-
-// c();
+game();
